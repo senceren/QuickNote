@@ -1,95 +1,76 @@
+'use client';
 import Image from 'next/image'
 import styles from './page.module.css'
+import 'bootstrap/dist/css/bootstrap.min.css';
+import { Button, Col, Row, Container, ListGroup, ListGroupItem, Form, NavItem } from 'react-bootstrap';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faEnvelope, faPlus } from '@fortawesome/free-solid-svg-icons'
+import { ToastContainer, toast } from 'react-toastify';
+import { useEffect, useState } from 'react';
+import NavigationBar from '@/components/NavigationBar';
+import axios from 'axios';
+
 
 export default function Home() {
+
+  const apiUrl = "https://localhost:7058/api/Notes";
+  const [notes, setNotes] = useState([])
+  const [selectedNote, setSelectedNote] = useState(null);
+
+  useEffect(() => {
+    fetch(apiUrl)
+      .then(res => res.json())
+      .then(data => setNotes(data));
+  }, []);
+
+  const itemClicked = function (e, note) {
+    setSelectedNote(note);
+  };
+
+  const addNewNote = (e) => {
+    const newNote = {
+      title: "New Note",
+      content: ""
+    };
+    axios.post(apiUrl, newNote).then(function (response) {
+      setNotes([...notes, response.data]);
+      setSelectedNote(response.data);
+    });
+  };
+
+
   return (
     <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>app/page.js</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
+      <NavigationBar />
+      <Container>
+        <Row>
+          <Col md={4} lg={3} sm={5}>
+            <div className='d-flex justify-content-end'>
+              <Button className='mt-2'> <FontAwesomeIcon icon={faPlus} onClick={addNewNote} /> </Button>
+            </div>
+            <ListGroup className="mt-2">
+              {/* item a tıklandığında idsi ile birlikte evente gönder */}
+              {
+                notes.map(note => (
+                  <ListGroupItem key={note.id}
+                    onClick={(e) => itemClicked(e, note)} action active={note == selectedNote}>
+                    {note.title}
+                  </ListGroupItem>))
+              }
+            </ListGroup>
+          </Col>
+          <Col md={8} lg={9} sm={7}>
+            <div className="mt-3">
+              <Form.Control placeholder='Title' value={selectedNote?.title} />
+            </div>
+            <div className="mt-2">
+              <Form.Control as="textarea" placeholder='Your note..' rows={10} value={selectedNote?.content} />
+            </div>
+          </Col>
+        </Row>
+      </Container>
+      <ToastContainer />
 
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore the Next.js 13 playground.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
     </main>
-  )
+  );
 }
